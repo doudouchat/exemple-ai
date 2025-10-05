@@ -11,14 +11,21 @@
 	<groupId>exemple</groupId>
 	<artifactId>exemple-ai</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>pom</packaging>
 	<organization>
 		<name>EXEMPLE</name>
 	</organization>
 
+	<modules>
+		<module>exemple-ai-launcher</module>
+		<module>exemple-ai-api</module>
+		<module>exemple-ai-assistant</module>
+		<module>jacoco-report</module>
+	</modules>
+
 	<scm>
-		<connection>scm:git:git://github.com/doudouchat/exemple-service.git</connection>
-		<developerConnection>scm:git:https://github.com/doudouchat/exemple-service.git</developerConnection>
+		<connection>scm:git:git://github.com/doudouchat/exemple-ai.git</connection>
+		<developerConnection>scm:git:https://github.com/doudouchat/exemple-ai.git</developerConnection>
 		<url>https://github.com/doudouchat/exemple-service</url>
 		<tag>HEAD</tag>
 	</scm>
@@ -27,7 +34,7 @@
 		<repository>
 			<id>github</id>
 			<name>GitHub doudouchat Packages</name>
-			<url>https://maven.pkg.github.com/doudouchat/exemple-service</url>
+			<url>https://maven.pkg.github.com/doudouchat/exemple-ai</url>
 		</repository>
 	</distributionManagement>
 
@@ -38,10 +45,20 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
+
+		<!-- VERSION -->
+		<ollama.version>0.12.3</ollama.version>
+		<jacoco.version>0.8.12</jacoco.version>
+
+		<!-- SONAR -->
+		<sonar.coverage.exclusions>**/test/**/*.java</sonar.coverage.exclusions>
+		<sonar.coverage.report.path>${basedir}/../jacoco-report/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.report.path>
+
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
+
 			<dependency>
 				<groupId>org.springframework.ai</groupId>
 				<artifactId>spring-ai-bom</artifactId>
@@ -49,29 +66,211 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			
 		</dependencies>
 	</dependencyManagement>
 
 	<dependencies>
+
+		<!-- LOGGING -->
+
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.ai</groupId>
-			<artifactId>spring-ai-starter-model-openai</artifactId>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
 		</dependency>
 
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
 		</dependency>
+
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+		</dependency>
+
+		<!-- LOGBACK -->
+
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+		</dependency>
+
+		<!-- YAML -->
+
+		<dependency>
+			<groupId>org.yaml</groupId>
+			<artifactId>snakeyaml</artifactId>
+		</dependency>
+
+		<!-- LOMBOK -->
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		</dependency>
+
+		<!-- JUNIT -->
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- ASSERTJ -->
+
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
+	<build>
+		<pluginManagement>
+			<plugins>
+				<!-- COMPILATION -->
+				<!-- http://maven.apache.org/plugins/maven-compiler-plugin/ -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<annotationProcessorPaths>
+							<path>
+								<groupId>org.projectlombok</groupId>
+								<artifactId>lombok</artifactId>
+								<version>${lombok.version}</version>
+							</path>
+						</annotationProcessorPaths>
+					</configuration>
+				</plugin>
+
+				<!-- WAR -->
+				<!-- http://maven.apache.org/plugins/maven-war-plugin/ -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<configuration>
+						<archive>
+							<manifest>
+								<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+								<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							</manifest>
+							<manifestEntries>
+								<Built-By>${project.organization.name}</Built-By>
+								<Build-Time>${maven.build.timestamp}</Build-Time>
+							</manifestEntries>
+						</archive>
+					</configuration>
+				</plugin>
+
+				<!-- JAR -->
+				<!-- http://maven.apache.org/plugins/maven-jar-plugin/index.html -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<configuration>
+						<archive>
+							<manifest>
+								<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+								<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							</manifest>
+							<manifestEntries>
+								<Built-By>${project.organization.name}</Built-By>
+								<Build-Time>${maven.build.timestamp}</Build-Time>
+							</manifestEntries>
+						</archive>
+					</configuration>
+				</plugin>
+
+				<!-- TEST UNITAIRE -->
+				<!-- http://maven.apache.org/plugins/maven-surefire-plugin/ -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<configuration>
+						<argLine>${jacoco.test.agent.argLine}</argLine>
+					</configuration>
+				</plugin>
+
+				<!-- VERSION -->
+				<!-- https://www.mojohaus.org/versions-maven-plugin/index.html -->
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>versions-maven-plugin</artifactId>
+					<configuration>
+						<processDependencyManagement>false</processDependencyManagement>
+						<outputFile>${project.build.directory}/outdated-dependencies.txt</outputFile>
+						<outputEncoding>${project.build.sourceEncoding}</outputEncoding>
+					</configuration>
+				</plugin>
+
+				<!-- JACOCO -->
+				<!-- http://www.eclemma.org/jacoco/trunk/doc/maven.html -->
+				<plugin>
+					<groupId>org.jacoco</groupId>
+					<artifactId>jacoco-maven-plugin</artifactId>
+					<version>${jacoco.version}</version>
+					<executions>
+						<execution>
+							<id>prepare-jacoco-ut-agent</id>
+							<goals>
+								<goal>prepare-agent</goal>
+							</goals>
+							<phase>process-test-classes</phase>
+							<configuration>
+								<propertyName>jacoco.test.agent.argLine</propertyName>
+								<includes>
+									<include>com.exemple.ai.*</include>
+								</includes>
+							</configuration>
+						</execution>
+						<execution>
+							<id>report</id>
+							<goals>
+								<goal>report</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+
+			</plugins>
+		</pluginManagement>
+
+		<plugins>
+			<!-- COMPILATION -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+
+			<!-- RESSOURCES -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+			</plugin>
+
+			<!-- TEST UNITAIRE -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+			</plugin>
+
+			<!-- JACOCO -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+			</plugin>
+
+			<!-- HELPER -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+			</plugin>
+
+
+		</plugins>
+	</build>
 </project>
