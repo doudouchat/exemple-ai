@@ -1,0 +1,13 @@
+logging:
+   pattern:
+      console: "%d %-5p: %C - %m%n"
+   level:
+      root: WARN
+      com.exemple.ai: DEBUG
+spring:
+   ai:
+      ollama:
+         base-url: http://localhost:11434
+ollama:
+   version: ${ollama.version}
+   model: mistral
